@@ -1,0 +1,195 @@
+OS. gyak 6
+---
+Reguláris kifejezések, a grep használata
+
+A reguláris kifejezések olyan karakterláncok, amelyek segítségével könnyen és hatékonyan lehet keresni az adatok között. Olyan esetekre ad megoldást, amikor nem tudjuk megnevezni a karakterláncot, hanem csak a karakterláncot leíró "szabályokat" tudjunk megondani.
+
+Példa: Telefonszámok
+
+Lehetséges formátumok
+06704564453
++3670569678
+
+Formátumok eltérő mintákat követnek
+###########
++##########
+
+Megoldás: reguláris kifejezések használata
+Létre kell hoznunk egy olyan mintát, amely az összes telefonszám formátumra tud biztosítani egyezést
+^(\+36|06)(20|30|70)[0-9]{7}$ - Ez a formátum mind a két telefonszám formátumot azonosítani tudja
+
+Példák:
+
+abc - egyezés az "abc" kifejezésre
+[hjkl] - egyezés a h, j, k vagy l karakterekre
+07-?131 – egyezés "07131" vagy a "07-131" kifejezésekre
+item[1-3] – egyezés az "item1", az "item2" vagy az "item3" kifejezésekre
+codes* - egyezés a "code", a "codes", a "codess", a "codeesss" stb. kifejezésekre
+
+Reguláris kifejezés részei
+--
+1. Normál karakterek
+abc - illeszkedés az "abc" kifejezésre
+
+2. Kvantifikátorok
+repeating* – illeszkedés "repeatin", "repeating", " repeatingggg" stb. kifejezésekre
+Megjegyzés: A * kifejezés az előtte lévő "g" karakterre vonatkozik, amennyiből állhat 0 vagy bármennyi darab a kifejezés végén.
+
+ab{1,3} – illeszkedés az "ab", az "abb", vagy az "abbb" kifejezésekkel
+Megjegyzés: A {1,3} zárójeles érték az előtte lévő "b" karakterre vonatkozik, amelyből lehet, 1, 2 vagy 3 darab.
+
+Karakter osztályok
+[hjkl] – illeszkedés a "h", a "j", a "k" és az "l" karakterekre
+\d – illeszkedés egy számjegy karakterre 0 és 9 között
+. – illeszkedés bármilyen karakterre
+
+Kvantifikátorok
+a? - 0 vagy 1 darab "a" karakter
+a* - 0 vagy több darab "a" karakter
+a+ - 1 vagy több darab "a" karakter
+a{3} - pontosan 3 darab "a" karakter
+a{3,} - 3 vagy több darab "a" karakter
+a{3,6} - 3 és 6 között "a" karakter
+
+Karakter osztályok
+[abc] - a vagy b vagy c
+[^abc] - bármi ami nem a vagy b vagy c
+[a-z] - kisbetű
+[^A-Za-z] - minden ami nem betű
+\s - szóköz
+\d - számjegy
+\b - szóhatár (egy különálló szó keresésére)
+. - bármilyen tetszőleges karakter
+
+Speciális szekvenciák
+$ - A string vége
+^ - A string eleje
+| - Vagy operátor
+() - Zárójelek a csoportosításhoz
+
+Az előző telefonszámos példa:
+06704564453
++36205696789
+
+^(\+36|06)(20|30|70)[0-9]{7}$
+
+^ - a string eleje
+(\+36|06) - előhívó lehet +36 vagy 06
+(20|30|70) - körzetszám lehet 20, 30, vagy 70
+[0-9]{7} - 7 db számjegy (0-9)
+$ - string vége
+
+Mi van akkor, ha kell illesztés vezetékes telefonszámra és mobil telefonszámra is?
+
+^(06|\+36)((20|30|50)\d{7}|(\d{6}))$
+
+A kifejezés az alábbiak szerint működik:
+
+^ jelöli az illeszkedés kezdetét.
+(06|\+36) a telefonszám előtagját illeszti, ami lehet "06" vagy "+36".
+((20|30|50)\d{7}|\d{6}) a telefonszámot illeszti, ami attól függően, hogy a körzetszám 20, 30 vagy 50-e, 7 vagy 6 jegyű lehet. Az első zárójelben az illesztendő körzetszámok találhatók, a második zárójelben pedig a telefonszám 7 vagy 6 jegyűsége van meghatározva. A cső szimbólum a "vagy" műveletet jelenti.
+$ jelöli az illeszkedés végét.
+
+Példák az illeszkedő telefonszámokra:
+
++3612345678
+0612345678
++36301234567
+06301234567
++36501234567
+06123456
+
+Használat
+- grep "keresett minta" myfile.txt
+- alapesetben a minta pontos előfordulását keresi
+- a keresés case sensitive
+
+Opciók
+-i: a keresés nem case sensitive
+-v: a minta ne forduljon elő
+-n: ne írja ki az illeszkedő sor számát
+-E: kibővített (egrep) üzemmód
+-o: csak az egyezést adja vissza nem az egész sort
+-q: csendes üzemmód, csak visszatérési értékkel jelzi, hogy van-e találat
+
+Működés
+---
+Amikor megadunk egy mintát, akkor a minta pontos előfordulását kerestük a fájlban.
+A grep soronkénti feldolgozást végez
+Ha van találat 0 a visszatérési értéke, ha nem talál, akkor 1 lesz a visszatérési értéke
+
+Literal match 1:1-ben meg kell egyezni a mintának az adott sor mintjával
+
+Regexp: Mintha kódolást vagy rövidítést szeretnénk használni
+
+grep "az" myfile.txt - soronként megnézzük, hogy szerepel-e az "az" kifejezés
+
+^ sor eleji egyezőség
+grep "^Az " myfile.txt - kiír minden "Az" névelővel kezdődő sort
+
+$ sor végi egyezőség
+grep "\.$" myfile.txt - kiír minden "pontra" végződő sort
+
+. a tetszőleges karakter
+grep "..len" myfile.txt kiírja, hogy közvetlen de nem írja ki, hogy élen, mert ott csak egy karakter van
+
+[] karaktercsoport illesztés
+grep " [ea]z " myfile.txt vagy e vagy a betű (ez, az szó)
+
+- intervallum illesztés
+grep "^[A-Z]" myfile.txt kiír minden nagybetűvel kezdődő sort
+
+* ismétlődés nulla vagy tetszőleges darabszámmal
+grep "([A-Za-z ]*)" myfile.txt visszaad minden olyan sort, amelyben a zárójel között tetszőleges karakterek állnak
+
+\ escépezés: speciális karakterek illesztése
+
+Azért fontos, mert például a . karakter a reguláris kifejezésekben bármilyen karaktert jelent, kivéve az újsor karaktert (\n). Ez azt jelenti, hogy ha keresni akarunk pontosan egy pontot, akkor a \ karakterrel kell az előző karaktert "escapelnünk", hogy mentesítsük a speciális jelentés elől.
+
+Pl. Kijelentő mondatok keresése a file.txt-ben.
+
+grep "^(A |Az )?[A-Z][a-zA-Z]*\.$" file.txt
+
+Ez a reguláris kifejezés keresni fog minden olyan sort a file.txt fájlban, amely:
+
+^ - A sor elején kezdődik
+(A |Az )? - Az opció megjelenik nullaszor vagy egyszer, amely megegyezik az A vagy Az névelővel, utána egy szóközzel
+[A-Z] - Egy nagybetűvel kezdődik
+[a-zA-Z]* - További betűk követik, de csak betűk lehetnek, kisbetűk és nagybetűk egyaránt
+\. - Ponttal végződik
+$ - A sor végén ér véget
+
+grep -E kapcsoló vagy egrep: kibővített szabályrendszer
+---
+(): csoportosítás
+grep -E "()" myfile.txt egy csoport megadása
+
+|: vagy kapcsolat
+grep -E "( ez | az )" myfile.txt vagy " ez " vagy " az "
+
+*, +, ?: többszöri illesztés (1x, 2, többször, valahányszor)
+
+grep -E "\([A-Za-z]*\)" sorok.txt: 0 vagy tetszőleges számú előfordulás
+grep -E "\([A-Za-z]?\)" sorok.txt: 0 vagy 1 előfordulás
+grep -E "\([A-Za-z]+\)" sorok.txt: 1 vagy több előfordulás
+grep -E "\([A-Za-z]{2}\)" sorok.txt: 2 előfordulás
+grep -E "\([A-Za-z]{1,2}\)" sorok.txt: 1 vagy 2 előfordulás
+grep -E " [a-z]{4} " sorok.txt: 4 betűs szavak kiíratása
+
+Szóhatárok szűrése
+---
+A \b szóhatár egy speciális karakter a reguláris kifejezésekben (regexekben), amely a szóhatárt jelöli. A szóhatár azt jelzi, hogy a keresett minta csak akkor egyezik meg, ha az előtte vagy utána levő karakter nem betűkarakter (pl. szóköz, tabulátor, írásjelek stb.), vagy a sor eleje vagy vége. Ez hasznos lehet, ha pontosan meghatározott szavakat vagy szóösszetételeket szeretnénk keresni a szövegben.
+
+Például, ha megszeretnénk találni az "apple" szót egy szövegfájlban, de csak akkor, ha ez a szó önállóan áll egy sorban (tehát nem része más szónak vagy szóösszetételnek), akkor ezt a \b szóhatárral érhetjük el:
+
+grep "\bapple\b" myfile.txt
+
+Ez a parancs az "apple" szót csak akkor találja meg, ha az egy önálló szóként szerepel a sorban, és nem része más szónak, például "pineapple"-nek.
+
+--
+Fájlbeolvasás (ismétlés)
+
+while read line
+do
+# echo $line | grep ... (ciklusmag)
+done < file.txt
